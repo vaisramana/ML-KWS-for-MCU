@@ -627,7 +627,8 @@ def create_dnn_model(fingerprint_input, model_settings, model_size_info,
           b = tf.get_variable('b', shape=[layer_dim[i]])
           tf.summary.histogram('fc_'+str(i)+'_b', b)
           flow = tf.matmul(flow, W) + b
-          flow = tf.nn.relu(flow)
+          #flow = tf.nn.softmax(flow)
+          flow = tf.nn.tanh(flow)
           if is_training:
             flow = tf.nn.dropout(flow, dropout_prob)
 

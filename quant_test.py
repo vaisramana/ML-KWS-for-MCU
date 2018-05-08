@@ -78,6 +78,10 @@ def run_quant_inference(wanted_words, sample_rate, clip_duration_ms,
       FLAGS.act_max,
       is_training=False)
 
+  # Save graph.pbtxt.
+  tf.train.write_graph(sess.graph_def, "./",
+                       FLAGS.model_architecture + '_quantized.pbtxt')
+
   ground_truth_input = tf.placeholder(
       tf.float32, [None, label_count], name='groundtruth_input')
 

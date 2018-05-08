@@ -1,0 +1,8 @@
+python freeze.py --model_architecture dnn --model_size_info 144 144 144 --dct_coefficient_count 10 --window_size_ms 40 --window_stride_ms 40 --checkpoin ./work/DNN/DNN1/training/best/dnn_8444.ckpt-27600 --output_file ./dnn_144x144x144.pb
+python freeze.py --model_architecture dnn --model_size_info 20 16 12 --dct_coefficient_count 10 --window_size_ms 40 --window_stride_ms 40 --checkpoin ./work/DNN/DNN5/training/best/dnn_843.ckpt-300 --output_file ./dnn_20x16x12_softmax.pb
+python freeze.py --model_architecture dnn --model_size_info 600 600 600 --dct_coefficient_count 10 --window_size_ms 40 --window_stride_ms 40 --checkpoin ./work/DNN/DNN4/training/best/dnn_8735.ckpt-29200 --output_file ./dnn_600x600x600.pb
+
+
+
+python quant_test.py --model_architecture dnn --model_size_info 600 600 600 --act_max 128 128 128 128 128 --dct_coefficient_count 10 --window_size_ms 40 --window_stride_ms 40 --checkpoin ./work/DNN/DNN4/training/best/dnn_8483.ckpt-26800 --data_url=  --data_dir=../speech_commands_v0.01/
+python freeze.py     --model_architecture dnn --model_size_info 600 600 600 --act_max 128 128 128 128 128 --dct_coefficient_count 10 --window_size_ms 40 --window_stride_ms 40 --checkpoin ./work/DNN/DNN4/training/best/dnn_8483.ckpt-26800 --output_file ./dnn_600x600x600_quantized.pb

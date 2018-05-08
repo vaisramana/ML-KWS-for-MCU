@@ -160,7 +160,9 @@ def create_dnn_model(fingerprint_input, model_settings, model_size_info,
           if(act_max[i]!=0):
             flow = tf.fake_quant_with_min_max_vars(flow, min=-act_max[i], \
                        max=act_max[i]-(act_max[i]/128.0), num_bits=8)
-          flow = tf.nn.relu(flow)
+          
+          #flow = tf.nn.relu(flow)
+          flow = tf.nn.tanh(flow)
           if is_training:
             flow = tf.nn.dropout(flow, dropout_prob)
 

@@ -53,6 +53,7 @@ import tensorflow as tf
 from tensorflow.contrib.framework.python.ops import audio_ops as contrib_audio
 import input_data
 import models
+import quant_models
 from tensorflow.python.framework import graph_util
 
 FLAGS = None
@@ -78,11 +79,12 @@ def create_inference_graph(wanted_words, sample_rate, clip_duration_ms,
   """
 
   words_list = input_data.prepare_words_list(wanted_words.split(','))
-  model_settings = models.prepare_model_settings(
+  model_settings = quant_models.prepare_model_settings(
       len(words_list), sample_rate, clip_duration_ms, window_size_ms,
       window_stride_ms, dct_coefficient_count)
   runtime_settings = {'clip_stride_ms': clip_stride_ms}
 
+  '''
   wav_data_placeholder = tf.placeholder(tf.string, [], name='wav_data')
   decoded_sample_data = contrib_audio.decode_wav(
       wav_data_placeholder,
@@ -98,15 +100,26 @@ def create_inference_graph(wanted_words, sample_rate, clip_duration_ms,
       spectrogram,
       decoded_sample_data.sample_rate,
       dct_coefficient_count=dct_coefficient_count)
+  '''
   fingerprint_frequency_size = model_settings['dct_coefficient_count']
   fingerprint_time_size = model_settings['spectrogram_length']
+  fingerprint_input = tf.placeholder(tf.float32, [None, fingerprint_time_size * fingerprint_frequency_size], name='fingerprint_input')
+  
   reshaped_input = tf.reshape(fingerprint_input, [
       -1, fingerprint_time_size * fingerprint_frequency_size
   ])
-
+  '''
   logits = models.create_model(
       reshaped_input, model_settings, model_architecture, model_size_info,
       is_training=False, runtime_settings=runtime_settings)
+  '''
+  logits = quant_models.create_model(
+      fingerprint_input,
+      model_settings,
+      FLAGS.model_architecture,
+      FLAGS.model_size_info,
+      FLAGS.act_max,
+      is_training=False)
 
   # Create an output to use for inference.
   tf.nn.softmax(logits, name='labels_softmax')
@@ -121,7 +134,7 @@ def main(_):
                          FLAGS.window_size_ms, FLAGS.window_stride_ms,
                          FLAGS.dct_coefficient_count, FLAGS.model_architecture,
                          FLAGS.model_size_info)
-  models.load_variables_from_checkpoint(sess, FLAGS.checkpoint)
+  quant_models.load_variables_from_checkpoint(sess, FLAGS.checkpoint)
 
   # Turn all the variables into inline constants inside the graph and save it.
   frozen_graph_def = graph_util.convert_variables_to_constants(
@@ -187,6 +200,12 @@ if __name__ == '__main__':
       type=str,
       default='yes,no,up,down,left,right,on,off,stop,go',
       help='Words to use (others will be added to an unknown label)',)
+  parser.add_argument(
+      '--act_max',
+      type=float,
+      nargs="+",
+      default=[128,128,128],
+      help='activations max')
   parser.add_argument(
       '--output_file', type=str, help='Where to save the frozen graph.')
   FLAGS, unparsed = parser.parse_known_args()
